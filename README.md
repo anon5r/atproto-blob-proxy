@@ -19,7 +19,7 @@ GET /proxy/image/[did]/[cid]
 
 ```shell
 yarn install
-yarn dev
+yarn start
 ```
 
 # Deploy
