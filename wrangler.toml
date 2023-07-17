@@ -1,0 +1,11 @@
+name = "atproto-blob-proxy"
+compatibility_date = "2023-01-01"
+
+ATPROTO_SERVICE_SUFFIX=".bsky.social"
+ATPROTO_SERVICE="https://staging.bsky.social"
+SERVICE_APP_URL= "https://staging.bsky.app"
+
+
+[env.prod]
+ATPROTO_SERVICE="https://bsky.social"
+SERVICE_APP_URL= "https://bsky.app"
