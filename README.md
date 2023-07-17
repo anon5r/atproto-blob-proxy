@@ -1,8 +1,29 @@
-```
-npm install
-npm run dev
-```
+At-Protocol Blob proxy
+=====
+
+# Specs
+
+Runs on [Cloudflare Workers](https://workers.cloudflare.com/)
+
+
+## Request URL
 
 ```
-npm run deploy
+GET /proxy/image/[did]/[cid]
+```
+
+
+# How to run
+
+## Debug
+
+```shell
+yarn install
+yarn dev
+```
+
+# Deploy
+
+```shell
+yarn deploy
 ```
