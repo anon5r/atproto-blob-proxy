@@ -9,23 +9,24 @@ const proxy = new Hono();
 
 app.get("/ping", (c: Context) => c.text("pong"));
 
-proxy.get("/image", (c: Context) => c.text("No image"));
-proxy.get("/image/:did/:cid", async (c: Context) => {
-  const { did, cid } = c.req.param();
+proxy.get("/:service/image", (c: Context) => c.text("No image"));
+proxy.get("/:service/image/:did/:cid", async (c: Context) => {
+  const { service, did, cid } = c.req.param();
 
-  console.log("did = ", did, "\ncid = ", cid);
+  console.log(`target Service = ${service}`)
+  console.log(`did = ${did}`, `cid = ${cid}`);
 
   const cache = caches.default;
 
-  const cacheKey = `${c.req.url}/.blob`;
+  const cacheKey = `${c.req.url}.blob`;
   console.log("cacheKey = ", cacheKey);
 
-  const getAgent = () => {
-    atp = new AtpAgent({ service: "https://bsky.social" });
-    return atp;
-  };
-
   try {
+    const getAgent = () => {
+      atp = new AtpAgent({ service: `https://${service}` });
+      return atp;
+    };
+    
     let response = await cache.match(cacheKey);
 
     if (!response) {
@@ -40,8 +41,9 @@ proxy.get("/image/:did/:cid", async (c: Context) => {
       });
 
       //URL.createObjectURL(blobObject)
+      const cacheAge = 60 * 60 * 24 * 7 // 1 week
       response = new Response(blobObject, blobResp.headers);
-      response.headers.append("Cache-Control", "s-maxage=3600");
+      response.headers.append("Cache-Control", `s-maxage=${cacheAge}`);
 
       c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
     }
