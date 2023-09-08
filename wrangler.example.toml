@@ -2,7 +2,10 @@ name = "atproto-blob-proxy"
 main = "src/index.ts"
 compatibility_date = "2023-07-17"
 usage_model = "bundled"
-env = { }
+
+
+account_id = "REPLACE YOUR ACCOUNT"
+workers_dev = true
 
 [triggers]
 crons = [ ]
@@ -11,3 +14,9 @@ crons = [ ]
 ATPROTO_SERVICE = "https://bsky.social"
 ATPROTO_SERVICE_SUFFIX = ".bsky.social"
 SERVICE_APP_URL = "https://bsky.app"
+
+
+[[r2_buckets]]
+binding = 'BUCKET'
+bucket_name = 'replace-your-bucket'
+preview_bucket_name = 'replace-your-bucket'
