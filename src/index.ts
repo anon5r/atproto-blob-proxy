@@ -1,6 +1,6 @@
 import { Hono } from 'hono/quick'
 import { Context } from 'hono'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ComAtprotoSyncGetBlob } from '@atproto/api'
 
 type Bindings = {
   BUCKET: R2Bucket
@@ -15,24 +15,24 @@ const proxy = new Hono()
 
 app.get('/ping', (c: Context) => c.text('pong'))
 
-proxy.get('/:service/image', (c: Context) => c.text('No image'))
+proxy.get('/:pds/image', (c: Context) => c.text('No image'))
 
 
-proxy.get('/:service/image/:did/:cid', async (c: Context) => {
-  const { service, did, cid } = c.req.param()
+proxy.get('/:pds/image/:did/:cid', async (c: Context) => {
+  const { pds, did, cid } = c.req.param()
 
-  console.log(`target Service = ${service}`)
+  console.log(`target PDS = ${pds}`)
   console.log(`did = ${did}`, `cid = ${cid}`)
 
-  const cache = caches.default
-  const cacheAge = 60 * 60 * 24 * 3 // 3 days
-  const cacheKey = `${service}/${did.replaceAll(':','/')}/${cid}`
+  const cache: Cache = caches.default
+  const cacheAge: number = 60 * 60 * 24 * 3 // 3 days
+  const cacheKey: string = `${pds}/${did.replaceAll(':','/')}/${cid}`
   console.log(`cacheKey = ${cacheKey}`)
 
   try {
     // Cache hit
     //let response = await cache.match(c.req.url)
-    let response = null
+    let response: Response | null = null
 
     if (!response) {
       try {
@@ -54,14 +54,14 @@ proxy.get('/:service/image/:did/:cid', async (c: Context) => {
             },
           })
         } else {
-          
+
           // Fetch from PDS repo
 
           const getAgent = () => {
-            return new AtpAgent({ service: `https://${service}` })
+            return new AtpAgent({ service: `https://${pds}` })
           }
 
-          const blobResp = await getAgent().api.com.atproto.sync.getBlob({
+          const blobResp: ComAtprotoSyncGetBlob.Response = await getAgent().api.com.atproto.sync.getBlob({
             did: did,
             cid: cid,
           })
@@ -70,7 +70,7 @@ proxy.get('/:service/image/:did/:cid', async (c: Context) => {
           const contentType = blobResp.headers['content-type']
 
           // console.debug(blobResp.headers)
-          console.debug('start put to R2')
+          console.debug('start putting to R2')
           const putResult = await c.env.BUCKET.put(cacheKey, blobResp.data, {
             httpMetadata: {
               contentType: contentType,
@@ -79,7 +79,7 @@ proxy.get('/:service/image/:did/:cid', async (c: Context) => {
           })
           console.log('R2: put result = ', putResult)
           if (putResult == null) throw new Error('Failed to put objects to R2')
-          console.debug('finish put to R2')
+          console.debug('finish putting to R2')
 
           const blob = new Blob([blobResp.data], {
             type: contentType,
