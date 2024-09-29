@@ -1,6 +1,8 @@
 import { Hono } from 'hono/quick'
 import { Context } from 'hono'
 import { AtpAgent, ComAtprotoSyncGetBlob } from '@atproto/api'
+import image from './proxy/image'
+import video from './proxy/video'
 
 type Bindings = {
   BUCKET: R2Bucket
@@ -69,43 +71,9 @@ proxy.get('/:pds/image/:did/:cid', async (c: Context) => {
 
           const contentType = blobResp.headers['content-type']
 
-          // console.debug(blobResp.headers)
-          console.debug('start putting to R2')
-          const putResult = await c.env.BUCKET.put(cacheKey, blobResp.data, {
-            httpMetadata: {
-              contentType: contentType,
-              contentLength: blobResp.headers['content-length'],
-            }
-          })
-          console.log('R2: put result = ', putResult)
-          if (putResult == null) throw new Error('Failed to put objects to R2')
-          console.debug('finish putting to R2')
 
-          const blob = new Blob([blobResp.data], {
-            type: contentType,
-          })
-          // Create response
-          response = new Response(blob, blobResp.headers)
-          response.headers.set('Cache-Control', `public, max-age=${cacheAge}, immutable`)
-          c.executionCtx.waitUntil(cache.put(c.req.url, response.clone()))
-        }
-      } catch (error) {
-        console.error(error)
-        throw error
-      }
-
-    }
-
-    return response
-
-
-  } catch (error) {
-    console.error(error)
-    c.status(404)
-    c.text('Not found')
-    return c.res
-  }
-});
+proxy.get('/:pds/image/:did/:cid', image);
+proxy.get('/:pds/video/:did/:cid', video);
 
 app.route('/proxy', proxy)
 
